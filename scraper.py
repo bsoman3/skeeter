@@ -9,9 +9,17 @@ import string
 import whitelist
 import checkers
 from collections import Counter
+import argparse
 
 #function to list all the files from which IOCs can be extracted
 def listFiles(path):
+
+    # If the input is a single file, make a list of it and return it
+    if os.path.isfile(path):
+        return [path]
+
+    # Otherwise, walk the subdirectories and return a list of all the files
+    # contained therein
     filelist=set()
     for root, dirs, files in os.walk(path):
         for name in files:
@@ -34,56 +42,56 @@ reEmail = r"\b[A-Za-z0-9._%+-]+(@|\[@\])[A-Za-z0-9.-]+(\.|\[\.\])(XN--CLCHC0EA0B
 
 
 def extractIOC(text, indTypes):
-    IOCs=[]
+    IOCs=set()
     lines = text.split('\n')
     for line in lines:
         if "MD5"in indTypes:
-            temp=[]
+            temp=set()
 	    for m in re.finditer(reMD5, line, re.IGNORECASE):
-                temp.append(m.group())
+                temp.add(m.group())
                 for item in temp:
                     if checkers.checkmd5(item):
-                        IOCs.append(item)
+                        IOCs.add(item)
 
         if "IPv4" in indTypes:
-            temp=[]
+            temp=set()
 	    for n in re.finditer(reIPv4, line, re.IGNORECASE):
-                temp.append(n.group())
+                temp.add(n.group())
                 for item in temp:
                     item=item.translate(None, "[]")
                     if checkers.checkip(item):
-                        IOCs.append(item)
+                        IOCs.add(item)
 
         if "URL" in indTypes:
-            temp=[]
+            temp=set()
 	    for o in re.finditer(reURL, line, re.IGNORECASE):
-                temp.append(o.group())
+                temp.add(o.group())
                 for item in temp:
                     item=item.translate(None, "[]")
                     item=item.replace("http://", "")
                     item=item.replace("https://", "")
                     if checkers.checkurl(item):
-                        IOCs.append(item)
+                        IOCs.add(item)
 
         if "Domain" in indTypes:
-            temp=[]
+            temp=set()
 	    for p in re.finditer(reDomain, line, re.IGNORECASE):
-                temp.append(p.group())
+                temp.add(p.group())
                 for item in temp:
                     item=item.lower()
                     item=item.translate(None, "[]")
                     if checkers.checkdomain(item):
-                        IOCs.append(item)
+                        IOCs.add(item)
 
         if "Email" in indTypes:
-	    temp=[]
+	    temp=set()
             for q in re.finditer(reEmail, line, re.IGNORECASE):
-                temp.append(q.group())
+                temp.add(q.group())
                 for item in temp:
                     item=item.lower()
                     item=item.translate(None, "[]")
                     if checkers.checkemailadd(item):
-                        IOCs.append(item)
+                        IOCs.add(item)
 
     return IOCs
 
@@ -99,19 +107,35 @@ def quickQuotes(fileName):
 	return fileText
 
 def main():
-	try:
-	    path=sys.argv[1]
-	except:
-		print "Invalid Input"
-		sys.exit()
-	array=listFiles(path)
-	indicators=[]
-	for item in array:
-		text= quickQuotes(item)
-		indicators = indicators + extractIOC(text,["Domain", "MD5", "IPv4", "URL", "Email"])
-		
-	for item in indicators:
-		print item
+
+    # First, parse our command line arguments
+    argparser = argparse.ArgumentParser(description="Extract IOCs from vendor threat reports.")
+    argparser.add_argument("--output", dest="output", action="store",
+                           default=None, help="Filename in which to store the extracted indicators")
+    args, unknown_args = argparser.parse_known_args()
+
+    # Start with an empty list of indicators
+    indicators=set()
+
+    # Now parse all the files or dirs we provided on the command line.
+    # Anything left in unknown_args is a file or directory path.
+    for arg in unknown_args:
+        files=listFiles(arg)
+        for file in files:
+            text= quickQuotes(file)
+            indicators = indicators.union(extractIOC(text,["Domain", "MD5", "IPv4", "URL", "Email"]))
+
+
+    # Write the indicators.  If we asked for them to be put into a file,
+    # write them there.  Otherwise, dump to stdout.
+    if args.output:
+        indicator_file = open(args.output, "w")
+        
+    for indicator in indicators:
+        if args.output:
+            indicator_file.write(indicator+"\n")
+        else:
+            print indicator
 
 if __name__=='__main__':
     main()
