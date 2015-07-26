@@ -85,7 +85,7 @@ def checkurl(url):
 
     return 1
 
-def checkmd5(msd5str):
+def checkmd5(md5str):
     reMD5 = r"^([A-F]|[0-9]){32}$"
     try:
         if bool(re.match(reMD5, md5str)):
