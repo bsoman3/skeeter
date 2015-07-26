@@ -1,3 +1,4 @@
+from __future__ import print_function
 import tldextract
 import re
 import whitelist
@@ -17,7 +18,7 @@ def checkip(ipadd):
         else:
             return 0
     except Exception as e:
-        print str(e)
+        print(str(e))
         return -1
 
 def checkdomain(domain):

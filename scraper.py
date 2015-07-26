@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import re
 import textract
@@ -102,7 +103,7 @@ def quickQuotes(fileName):
 	except textract.exceptions.ExtensionNotSupported:
 		pass
 	except Exception as e:
-		print e
+		print(e)
 		pass
 	return fileText
 
@@ -135,7 +136,7 @@ def main():
         if args.output:
             indicator_file.write(indicator+"\n")
         else:
-            print indicator
+            print(indicator)
 
 if __name__=='__main__':
     main()
