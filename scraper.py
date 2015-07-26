@@ -113,6 +113,7 @@ def main():
     argparser = argparse.ArgumentParser(description="Extract IOCs from vendor threat reports.")
     argparser.add_argument("--output", dest="output", action="store",
                            default=None, help="Filename in which to store the extracted indicators")
+    argparser.add_argument("input", help="File/directory that we will extract IOCs from", nargs="+")
     args, unknown_args = argparser.parse_known_args()
 
     # Start with an empty list of indicators
@@ -120,7 +121,7 @@ def main():
 
     # Now parse all the files or dirs we provided on the command line.
     # Anything left in unknown_args is a file or directory path.
-    for arg in unknown_args:
+    for arg in args.input:
         files=listFiles(arg)
         for file in files:
             text= quickQuotes(file)
