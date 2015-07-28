@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import re
 import textract
@@ -23,14 +24,14 @@ def listFiles(path):
     filelist=set()
     for root, dirs, files in os.walk(path):
         for name in files:
-	    if not ".git" in os.path.join(root, name) and name not in ("contributors.md", "README.md"):
-	    	#correcting file name errors
-		if ".pdf.1" in name:
-		    name=name.replace(".pdf.1",".pdf")
-		if ".md" in name:
-		    name=name.replace(".md",".txt")
-		#adding filenames to list
-		filelist.add( os.path.join(root, name))
+            if not ".git" in os.path.join(root, name) and name not in ("contributors.md", "README.md"):
+            #correcting file name errors
+                if ".pdf.1" in name:
+                    name=name.replace(".pdf.1",".pdf")
+                if ".md" in name:
+                    name=name.replace(".md",".txt")
+        #adding filenames to list
+        filelist.add( os.path.join(root, name))
     return filelist
 
 
@@ -47,7 +48,7 @@ def extractIOC(text, indTypes):
     for line in lines:
         if "MD5"in indTypes:
             temp=set()
-	    for m in re.finditer(reMD5, line, re.IGNORECASE):
+            for m in re.finditer(reMD5, line, re.IGNORECASE):
                 temp.add(m.group())
                 for item in temp:
                     if checkers.checkmd5(item):
@@ -55,7 +56,7 @@ def extractIOC(text, indTypes):
 
         if "IPv4" in indTypes:
             temp=set()
-	    for n in re.finditer(reIPv4, line, re.IGNORECASE):
+            for n in re.finditer(reIPv4, line, re.IGNORECASE):
                 temp.add(n.group())
                 for item in temp:
                     item=item.translate(None, "[]")
@@ -64,7 +65,7 @@ def extractIOC(text, indTypes):
 
         if "URL" in indTypes:
             temp=set()
-	    for o in re.finditer(reURL, line, re.IGNORECASE):
+            for o in re.finditer(reURL, line, re.IGNORECASE):
                 temp.add(o.group())
                 for item in temp:
                     item=item.translate(None, "[]")
@@ -75,7 +76,7 @@ def extractIOC(text, indTypes):
 
         if "Domain" in indTypes:
             temp=set()
-	    for p in re.finditer(reDomain, line, re.IGNORECASE):
+            for p in re.finditer(reDomain, line, re.IGNORECASE):
                 temp.add(p.group())
                 for item in temp:
                     item=item.lower()
@@ -84,7 +85,7 @@ def extractIOC(text, indTypes):
                         IOCs.add(item)
 
         if "Email" in indTypes:
-	    temp=set()
+            temp=set()
             for q in re.finditer(reEmail, line, re.IGNORECASE):
                 temp.add(q.group())
                 for item in temp:
@@ -96,15 +97,15 @@ def extractIOC(text, indTypes):
     return IOCs
 
 def quickQuotes(fileName):
-	fileText=""
-	try:
-		fileText=textract.process(fileName)
-	except textract.exceptions.ExtensionNotSupported:
-		pass
-	except Exception as e:
-		print e
-		pass
-	return fileText
+    fileText=""
+    try:
+        fileText=textract.process(fileName)
+    except textract.exceptions.ExtensionNotSupported:
+        pass
+    except Exception as e:
+        print(e)
+        pass
+    return fileText
 
 def main():
 
@@ -112,6 +113,7 @@ def main():
     argparser = argparse.ArgumentParser(description="Extract IOCs from vendor threat reports.")
     argparser.add_argument("--output", dest="output", action="store",
                            default=None, help="Filename in which to store the extracted indicators")
+    argparser.add_argument("input", help="File/directory that we will extract IOCs from", nargs="+")
     args, unknown_args = argparser.parse_known_args()
 
     # Start with an empty list of indicators
@@ -119,7 +121,7 @@ def main():
 
     # Now parse all the files or dirs we provided on the command line.
     # Anything left in unknown_args is a file or directory path.
-    for arg in unknown_args:
+    for arg in args.input:
         files=listFiles(arg)
         for file in files:
             text= quickQuotes(file)
@@ -135,7 +137,7 @@ def main():
         if args.output:
             indicator_file.write(indicator+"\n")
         else:
-            print indicator
+            print(indicator)
 
 if __name__=='__main__':
     main()
