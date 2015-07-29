@@ -48,27 +48,7 @@ def checkdomain(domain):
         return 0
     if domain in whitelist.emailProviders or domain in whitelist.contentProviders:
         return 0
-    if e2LD in whitelist.emailProviders or e2LD in whitelist.contentProviders:
-        es = Elasticsearch()
-        q1 = {'match': {'dm.category':'whitelisted'}}
-        q2 = {'range': {'rank': {'gte':'0', 'lt': '100000'}}}
-        q3 = {'term': {'ind.domain':domain}}
-        q = {'bool': {'must': [q1, q2, q3]}}
-        res = es.search(index="threatintel", body={"query":q })
-        if res['hits']['total'] >0:
-            return 0
-        else:
-            return 1
     #if domain is in Alexa top 100,000, reject
-    es = Elasticsearch()
-    q1 = {'match': {'dm.category':'whitelisted'}}
-    q2 = {'range': {'rank': {'gte':'0', 'lt': '100000'}}}
-    q3 = {'term': {'ind.domain':e2LD}}
-    q = {'bool': {'must': [q1, q2, q3]}}
-    res = es.search(index="threatintel", body={"query":q })
-    if res['hits']['total'] >0:
-        return 0
-    return 1
 
 def checkurl(url):
     """This function checks if a URL is valid"""

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+#from __future__ import print_function
 import os
 import re
 import textract
@@ -25,13 +25,8 @@ def listFiles(path):
     for root, dirs, files in os.walk(path):
         for name in files:
             if not ".git" in os.path.join(root, name) and name not in ("contributors.md", "README.md"):
-            #correcting file name errors
-                if ".pdf.1" in name:
-                    name=name.replace(".pdf.1",".pdf")
-                if ".md" in name:
-                    name=name.replace(".md",".txt")
-        #adding filenames to list
-        filelist.add( os.path.join(root, name))
+        		#adding filenames to list
+        		filelist.add( os.path.join(root, name))
     return filelist
 
 
@@ -109,35 +104,38 @@ def quickQuotes(fileName):
 
 def main():
 
-    # First, parse our command line arguments
-    argparser = argparse.ArgumentParser(description="Extract IOCs from vendor threat reports.")
-    argparser.add_argument("--output", dest="output", action="store",
+	# First, parse our command line arguments
+	argparser = argparse.ArgumentParser(description="Extract IOCs from vendor threat reports.")
+	argparser.add_argument("--output", dest="output", action="store",
                            default=None, help="Filename in which to store the extracted indicators")
-    argparser.add_argument("input", help="File/directory that we will extract IOCs from", nargs="+")
-    args, unknown_args = argparser.parse_known_args()
+	argparser.add_argument("--input", help="File/directory that we will extract IOCs from", nargs="+")
+	argparser.add_argument("--verbose", action='store_true', help="Print everything (sort of)")
+	args, unknown_args = argparser.parse_known_args()
 
     # Start with an empty list of indicators
-    indicators=set()
-
-    # Now parse all the files or dirs we provided on the command line.
-    # Anything left in unknown_args is a file or directory path.
-    for arg in args.input:
-        files=listFiles(arg)
-        for file in files:
-            text= quickQuotes(file)
-            indicators = indicators.union(extractIOC(text,["Domain", "MD5", "IPv4", "URL", "Email"]))
+	indicators=set()
+	
+	# Now parse all the files or dirs we provided on the command line.
+	# Anything left in unknown_args is a file or directory path.
+	for arg in args.input:
+		files=listFiles(arg)
+		if args.verbose:
+			print(files)
+		for afile in files:
+			text= quickQuotes(afile)
+			indicators = indicators.union(extractIOC(text,["Domain", "MD5", "IPv4", "URL", "Email"]))
 
 
     # Write the indicators.  If we asked for them to be put into a file,
     # write them there.  Otherwise, dump to stdout.
-    if args.output:
-        indicator_file = open(args.output, "w")
-        
-    for indicator in indicators:
-        if args.output:
-            indicator_file.write(indicator+"\n")
-        else:
-            print(indicator)
+	if args.output:
+		indicator_file = open(args.output, "w")
+		
+	for indicator in indicators:
+		if args.output:
+			indicator_file.write(indicator+"\n")
+		else:
+			print(indicator)
 
 if __name__=='__main__':
     main()
